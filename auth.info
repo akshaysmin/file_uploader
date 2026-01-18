@@ -1,0 +1,5 @@
+proxy_host = '<proxy.host.address>'
+proxy_port = '<port_number>'
+username = '<username>'
+password = '<password>'
+upload_website = '<http://website.to.upload.files.site/'
