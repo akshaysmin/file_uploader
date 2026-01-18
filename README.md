@@ -1,7 +1,9 @@
 # file_uploader
-uploads files one by one to a particular website; can be modified to apply this to any...
+uploads files one by one to a particular website; can be modified to automate any website interactions
 
-Follow instructions in installer.sh to install prerequisites
+Use installer.sh to install prerequisites and necessary programs
+
+> bash installer.sh
 
 snowycat.py is the main program
 Use case :
