@@ -1,7 +1,7 @@
 # file_uploader
 uploads files one by one to a particular website; can be modified to automate any website interactions
 
-Use installer.sh to install prerequisites and necessary programs
+Use installer.sh to install prerequisites and programs
 
 > bash installer.sh
 
