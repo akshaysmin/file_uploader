@@ -1,4 +1,4 @@
-#!./.snowenv/bin/python3
+#!/home/subbu/Downloads/Akshay/fast_transfer/internet2intranet/.snowenv/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan 15 17:50:44 2026
@@ -16,8 +16,10 @@ Mozilla Firefox 146.0.1 wget https://ftp.mozilla.org/pub/firefox/releases/146.0.
 geckodriver 0.34.0 wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
 """
 import sys
+import subprocess
 import os
 import zipfile
+import atexit
 from datetime import datetime
 from time import sleep
 import random
@@ -98,6 +100,19 @@ def create_proxy_extension(proxy_host, proxy_port, proxy_user, proxy_pass):
 
 
 def open_browser():
+    # Create the extension
+    extension_path = create_proxy_extension(proxy_host, proxy_port, username, password)
+
+    # Start proxy for browser
+    f_proxy_log = open('proxy.log', 'w')
+    atexit.register(lambda : f_proxy_log.close())
+    proxy_process = subprocess.Popen(['proxy', '--plugins', 'proxy.plugin.ProxyPoolPlugin', '--proxy-pool', f'http://{username}:{password}@{proxy_host}:{proxy_port}'],
+                                     stdout = f_proxy_log,
+                                     stderr = f_proxy_log,
+                                    )
+    print(f"The proxy process PID is: {proxy_process.pid}")
+    atexit.register(lambda : proxy_process.terminate())
+
     # firefox options
     service = Service(geckodriver_path)
     options = Options()
@@ -133,16 +148,19 @@ def open_browser():
     #refresh(driver)
     print('opened driver')
     driver.get(upload_website)
-    sleep(2)
     refresh(driver)
-    driver.find_element(By.NAME, 'username').send_keys(usname)
+    sleep(2)
+    _ = WebDriverWait(driver, 30).until( EC.presence_of_element_located((By.NAME, "username") ) ) 
+    _ = WebDriverWait(driver, 30).until( EC.presence_of_element_located((By.NAME, "password") ) ) 
+    driver.find_element(By.NAME, 'username').send_keys(username)
     sleep(2*random.random())
     driver.find_element(By.NAME, 'username').send_keys(Keys.TAB)
     sleep(2*random.random())
-    driver.find_element(By.NAME, 'password').send_keys(passwd)
+    driver.find_element(By.NAME, 'password').send_keys(password)
     sleep(2*random.random())
     driver.find_element(By.NAME, 'password').send_keys(Keys.ENTER)
     driver.maximize_window()
+    print('logged in')
     return driver
 
 def refresh(driver):
@@ -202,10 +220,10 @@ def keep_active(driver):
     progress = 0
     progress2 = 0
     while progress!='Done':
-        elements = driver.find_element(By.CLASS_NAME, "progress-items").find_elements(By.TAG_NAME, "progress")#find_elements(By.XPATH, './/*')
-        element = random.choice(elements)
-        print(element.location_once_scrolled_into_view)
-        print(element.text)
+        #elements = driver.find_element(By.CLASS_NAME, "progress-items").find_elements(By.TAG_NAME, "progress")#find_elements(By.XPATH, './/*')
+        #element = random.choice(elements)
+        #print(element.location_once_scrolled_into_view)
+        #print(element.text)
         #element.click()
         try:
             progress2 = driver.find_element(By.XPATH, "/html/body/div/div/div/div[1]/div/div/div[1]/div/div[1]/span").text
@@ -215,7 +233,7 @@ def keep_active(driver):
             did_exception = True
             print('Could not retrieve current proress, instead got', progress2)
         if not did_exception: progress = progress2
-        print(progress)
+        sys.stdout.write(f'\r{progress}   ')
         #rows_text = ''
         #for i in range(len(driver.find_elements(By.TAG_NAME, "tr"))):
         #    elems = driver.find_elements(By.TAG_NAME, "tr")
@@ -226,25 +244,16 @@ def keep_active(driver):
         #    if filename in rows_text:
         #        while filename in missed_uploads:
         #            missed_uploads.remove(filename)
-        sleep(2)
+        sleep(1)
+    print()
     return #missed_uploads
 
-#actions = ActionChains(driver)
-#actions.send_keys(usname)
-#sleep(3+3*random.random())
-#actions.send_keys(Keys.TAB)
-#sleep(3+3*random.random())
-#actions.send_keys(passwd)
-#sleep(3+3*random.random())
-#actions.send_keys(Keys.ENTER)
-
-
-#mode = input('Press Enter to start program \n>>')
 
 def upload_files(files2upload):
     driver = open_browser()
     uploaded_files = []
     for i,upload_file in enumerate(files2upload):
+        n = len(files2upload)
         # refresh until uploads are transfered
         #refresh()
         uploading = True
@@ -272,6 +281,7 @@ def upload_files(files2upload):
                 refresh_success = refresh(driver)
                 count_refresh_to_get_filename_in_rows += 1
                 print('refresh success : ', refresh_success)
+                print(f'attempt to verify file upload: {count_refresh_to_get_filename_in_rows}/10')
                 print('Uploading ', i, '/', n, ' : ',  upload_file)
                 if (not refresh_success) or (count_refresh_to_get_filename_in_rows>10):
                     remaining_files = sorted(list(set(files2upload) - set(uploaded_files)))
@@ -341,8 +351,13 @@ if __name__=='__main__':
     files2upload = []
     if len(sys.argv)>1:
         files2upload = [os.path.realpath(file) for file in sys.argv[1:]]
-    for file in files2upload:
-        assert os.path.exists(file)
+    files2upload1 = [_ for _ in files2upload]
+    for file in files2upload1:
+        if not os.path.exists(file):
+            print()
+            print('!! File not found !! : ', file)
+            print()
+            files2upload.remove(file)
     files2upload = [ file for file in files2upload 
                        if not any(get_filename(file).startswith( get_filename(ex) ) 
                                   for ex in files2exclude
@@ -351,14 +366,12 @@ if __name__=='__main__':
     scriptdir = os.path.dirname(os.path.realpath(__file__))
     print(f'scriptdir = {scriptdir}')
 
-    # Path to your executables
-    geckodriver_path = os.path.join(scriptdir, 'geckodriver-v0.34.0-linux64/geckodriver')
-    firefox_binary = os.path.join(scriptdir, 'firefox-146.0.1/firefox/firefox')
-
+    # set up proxy process
     # Get auth details from auth.info
     try:
-        with open('auth.info') as f:
-            exec(f.read())
+        with open(os.path.join(scriptdir,'auth.info')) as f:
+            auth_ = f.read()
+            exec(auth_)
     except FileNotFoundError:
         print('File "auth.info" not found! Create file "auth.info" in the following format:\n\n')
         print('''
@@ -376,16 +389,15 @@ upload_website = '<http://website.to.upload.files.site/'
     for var in ['username', 'password']:
         if var not in dir():
             exec(f"{var} = getpass('{var} : ')")
+    print(proxy_host)
 
-    # Create the extension
-    extension_path = create_proxy_extension(proxy_host, proxy_port, username, password)
-
-    # Start proxy for browser
-    proxy_process = subprocess.Popen(['proxy', '--plugins', 'proxy.plugin.ProxyPoolPlugin', '--proxy-pool', f'http://{username}:{password}@{proxy_host}:{proxy_port}'])
+    # Path to your executables
+    geckodriver_path = os.path.join(scriptdir, 'geckodriver-v0.34.0-linux64/geckodriver')
+    firefox_binary = os.path.join(scriptdir, 'firefox-146.0.1/firefox/firefox')
 
     # open browser and upload files in archive
     print(files2upload)
     upload_files(files2upload)
 
     # Stop proxy for browser
-    proxy_process.terminate()
+    #proxy_process.terminate()
