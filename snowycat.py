@@ -1,4 +1,4 @@
-#!/home/subbu/Downloads/Akshay/fast_transfer/internet2intranet/.snowenv/bin/python3
+#!.snowenv/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan 15 17:50:44 2026
