@@ -14,7 +14,9 @@ for file in dev_snowycat.py dev_snowycat_folder.py dev_snowycat_archive.py
     done
 
 # download and extract geckodriver
-wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
+wget https://github.com/akshaysmin/file_uploader/blob/69b7f1aeeaef20d5cb2960a75c445095cfbfd61a/geckodriver-v0.34.0-linux64.tar.gz
+# uncomment the next line if geckodriver download fails in previous line. you can also go to the link and manually download this version
+# wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz
 mkdir geckodriver-v0.34.0-linux64
 tar -xvf geckodriver-v0.34.0-linux64.tar.gz --directory geckodriver-v0.34.0-linux64
 
