@@ -343,7 +343,15 @@ if __name__=='__main__':
     elif '--display' in sys.argv:
         display = True
         sys.argv.remove('--display')
-    files2exclude = []#[f'EAg2301{i:02}' for i in [1,2,3,4,5,6,7,8]]
+    config_dir=''
+    if '--configdir' in sys.argv:
+        curser = sys.argv.find('--configdir')
+        if len(sys.argv[curser:curser+2])==2:
+            config_dir = sys.argv[curser+1]
+            assert os.path.exists(config_dir)
+            sys.argv.remove(sys.argv[curser])
+            sys.argv.remove(sys.argv[curser])
+    files2exclude = []
     if '-ex' in sys.argv:
         parser = sys.argv.index('-ex')
         files2exclude = [os.path.realpath(file) for file in sys.argv[parser:]]
@@ -389,7 +397,16 @@ upload_website = '<http://website.to.upload.files.site/'
     for var in ['username', 'password']:
         if var not in dir():
             exec(f"{var} = getpass('{var} : ')")
-    print(proxy_host)
+
+    if config_dir:
+        with open(f'{config_dir}/auth.info', 'w') as f:
+            f.write(f'''
+proxy_host = '{proxy_host}'
+proxy_port = '{proxy_host}'
+username = '{proxy_host}'
+password = '{proxy_host}'
+upload_website = '{proxy_host}'
+        )
 
     # Path to your executables
     geckodriver_path = os.path.join(scriptdir, 'geckodriver-v0.34.0-linux64/geckodriver')
